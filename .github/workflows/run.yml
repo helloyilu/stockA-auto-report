@@ -19,4 +19,8 @@ jobs:
         run: pip install akshare pandas -i https://pypi.tuna.tsinghua.edu.cn/simple
 
       - name: 运行脚本
+        env:
+          MAIL_SENDER: ${{ secrets.MAIL_SENDER }}
+          MAIL_RECEIVER: ${{ secrets.MAIL_RECEIVER }}
+          MAIL_AUTH: ${{ secrets.MAIL_AUTH }}
         run: python stockA_report.py
