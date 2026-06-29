@@ -1,4 +1,5 @@
 import akshare as ak
+import time
 from datetime import datetime
 
 support_low = 1.40
@@ -6,28 +7,44 @@ support_area = [1.41, 1.43]
 pressure_area = [1.47, 1.49]
 neckline = 1.54
 
+# 只抓取4个TMT板块成交额，规避多余行业报错
 def get_tmt_ratio():
-    df_flow = ak.stock_sector_fund_flow_summary()
-    total_tmt = 0
-    for industry in ["电子", "计算机", "通信", "传媒"]:
-        row = df_flow[df_flow["行业"] == industry]
-        if not row.empty:
-            total_tmt += float(row.iloc[0]["成交额-亿"])
+    try:
+        # 4个行业成交额
+        trade_sum = 0
+        # 电子
+        df_dz = ak.stock_board_industry_summary_ths(symbol="电子元件")
+        trade_sum += float(df_dz.iloc[0]["成交额"])
+        # 计算机
+        df_jsj = ak.stock_board_industry_summary_ths(symbol="计算机应用")
+        trade_sum += float(df_jsj.iloc[0]["成交额"])
+        # 通信
+        df_tx = ak.stock_board_industry_summary_ths(symbol="通信设备")
+        trade_sum += float(df_tx.iloc[0]["成交额"])
+        # 传媒
+        df_cm = ak.stock_board_industry_summary_ths(symbol="文化传媒")
+        trade_sum += float(df_cm.iloc[0]["成交额"])
 
-    df_market = ak.stock_market_fund_flow()
-    sh = float(df_market[df_market["市场"]=="沪市"].iloc[0]["成交额-亿"])
-    sz = float(df_market[df_market["市场"]=="深市"].iloc[0]["成交额-亿"])
-    total_market = sh + sz
-    ratio = round((total_tmt / total_market)*100, 2)
-    return ratio
+        # 全市场总成交额
+        df_market = ak.stock_market_fund_flow()
+        total_market = float(df_market.iloc[0]["成交额"])
+        ratio = round(trade_sum / total_market * 100, 2)
+        return ratio
+    except Exception:
+        return -999
 
 def get_etf_price():
     today = datetime.now().strftime("%Y%m%d")
-    df = ak.fund_etf_hist_em(symbol="515080", start_date=today, end_date=today)
-    return round(float(df.iloc[-1]["收盘"]), 3)
+    try:
+        df = ak.fund_etf_hist_em(symbol="515080", start_date=today, end_date=today)
+        return round(float(df.iloc[-1]["收盘"]), 3)
+    except Exception:
+        return 0
 
 def build_report(ratio, price):
-    if ratio >= 45:
+    if ratio < 0:
+        crowd = "数据抓取失败"
+    elif ratio >= 45:
         crowd = "极度抱团｜止盈科技，盈利加仓红利"
     elif ratio >= 40:
         crowd = "热度升温｜继续持有科技仓位"
@@ -36,7 +53,9 @@ def build_report(ratio, price):
     else:
         crowd = "资金回流防御板块"
 
-    if price <= support_low:
+    if price <= 0:
+        price_text = "价格获取失败"
+    elif price <= support_low:
         price_text = "极限低点1.40，大额加仓窗口"
     elif support_area[0] <= price <= support_area[1]:
         price_text = "支撑区1.41~1.43，科技盈利转入加仓"
