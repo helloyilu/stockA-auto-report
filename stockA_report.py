@@ -13,24 +13,28 @@ neckline = 1.54
 
 # 抓取TMT四个板块成交额
 def get_tmt_ratio():
-    try:
-        trade_sum = 0
-        df_dz = ak.stock_board_industry_summary_ths(symbol="电子元件")
-        trade_sum += float(df_dz.iloc[0]["成交额"])
-        df_jsj = ak.stock_board_industry_summary_ths(symbol="计算机应用")
-        trade_sum += float(df_jsj.iloc[0]["成交额"])
-        df_tx = ak.stock_board_industry_summary_ths(symbol="通信设备")
-        trade_sum += float(df_tx.iloc[0]["成交额"])
-        df_cm = ak.stock_board_industry_summary_ths(symbol="文化传媒")
-        trade_sum += float(df_cm.iloc[0]["成交额"])
+    # 最多重试3次，每次等待3秒
+    for _ in range(3):
+        try:
+            trade_sum = 0
+            df_dz = ak.stock_board_industry_summary_ths(symbol="电子元件")
+            trade_sum += float(df_dz.iloc[0]["成交额"])
+            df_jsj = ak.stock_board_industry_summary_ths(symbol="计算机应用")
+            trade_sum += float(df_jsj.iloc[0]["成交额"])
+            df_tx = ak.stock_board_industry_summary_ths(symbol="通信设备")
+            trade_sum += float(df_tx.iloc[0]["成交额"])
+            df_cm = ak.stock_board_industry_summary_ths(symbol="文化传媒")
+            trade_sum += float(df_cm.iloc[0]["成交额"])
 
-        df_market = ak.stock_market_fund_flow()
-        total_market = float(df_market.iloc[0]["成交额"])
-        ratio = round(trade_sum / total_market * 100, 2)
-        return ratio
-    except Exception:
-        return -999
-
+            df_market = ak.stock_market_fund_flow()
+            total_market = float(df_market.iloc[0]["成交额"])
+            ratio = round(trade_sum / total_market * 100, 2)
+            return ratio
+        except Exception:
+            time.sleep(3)
+    # 三次都失败才返回-999
+    return -999
+    
 # 获取ETF收盘价
 def get_etf_price():
     today = datetime.now().strftime("%Y%m%d")
