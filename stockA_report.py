@@ -20,20 +20,28 @@ neck_high = 1.59
 
 # 获取TMT指数活跃度（替代板块成交额，境外IP稳定可用）
 def get_tmt_hot():
-    for _ in range(3):
+    for _ in range(2):
         try:
-            # 中证TMT指数：000998，新浪行情源，防封禁
             df_idx = ak.index_zh_a_hist(symbol="000998", period="daily",
                                          start_date=datetime.now().strftime("%Y%m%d"),
                                          end_date=datetime.now().strftime("%Y%m%d"))
-            amount = float(df_idx.iloc[-1]["成交额"])
-            # 换算成热度百分比，匹配原来的4档判断标准
-            hot_ratio = round(amount / 20000 * 100, 2)
-            return hot_ratio
+            amount_wan = float(df_idx.iloc[-1]["成交额"])
+            # 成交额（万元）转为亿元
+            amount_yi = amount_wan / 10000
+
+            # 直接分档位，不再计算百分比，杜绝大数错误
+            if amount_yi >= 2000:
+                return 46
+            elif amount_yi >= 1600:
+                return 42
+            elif amount_yi >= 1200:
+                return 36
+            else:
+                return 30
         except Exception:
-            time.sleep(3)
-    # 接口偶尔异常，固定给出中性数值，不再抓取失败
-    return 36.00
+            time.sleep(1)
+    # 异常中性值
+    return 36
 
 # 获取515080收盘价（原有稳定接口不变）
 def get_etf_price():
