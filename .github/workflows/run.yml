@@ -1,8 +1,8 @@
 name: 每日收盘行情日报
 on:
   schedule:
-    - cron: "45 15 * * 1-5"
-    timezone: 'Asia/Shanghai'
+    - cron: '45 15 * * 1-5'
+      timezone: 'Asia/Shanghai'
   workflow_dispatch:
 
 jobs:
