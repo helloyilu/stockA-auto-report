@@ -113,3 +113,4 @@ if __name__ == "__main__":
     mail_text = build_report(ratio_data, price_data)
     print(mail_text)
     send_email(mail_text)
+    # 临时刷新cron缓存
